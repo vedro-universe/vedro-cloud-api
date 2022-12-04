@@ -58,7 +58,7 @@ class HistoryRepository(Repository):
                 SELECT
                     scenario_hash,
                     PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY duration) AS median
-                FROM public.history
+                FROM {table_name}
                 GROUP BY scenario_hash
             )
             SELECT
