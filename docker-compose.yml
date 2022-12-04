@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15.1-alpine
+    environment:
+      - TZ=UTC
+      - POSTGRES_USER=vedro_cloud
+      - POSTGRES_PASSWORD=vedro_cloud
+      - POSTGRES_DB=vedro_cloud
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432"
+    healthcheck:
+      test: "pg_isready -U postgres"
+      interval: 3s
+      timeout: 5s
+      retries: 10

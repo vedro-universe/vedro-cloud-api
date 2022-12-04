@@ -1,1 +1,1 @@
-# vedro-cloud-api
+# Vedro Cloud API
