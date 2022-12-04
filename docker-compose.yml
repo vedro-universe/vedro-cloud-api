@@ -1,6 +1,19 @@
 version: "3.9"
 
 services:
+  app:
+    image: vedrouniverse/vedro-cloud-api:0.1.0
+    environment:
+      - TZ=UTC
+      - DB_DSN=postgresql://vedro_cloud:vedro_cloud@db:5432/vedro_cloud
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: "wget -q -O - http://localhost/healthcheck"
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
   db:
     image: postgres:15.1-alpine
     environment:
@@ -11,9 +24,9 @@ services:
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
-      - "5432"
+      - "6432:5432"
     healthcheck:
-      test: "pg_isready -U postgres"
+      test: "pg_isready -U vedro_cloud"
       interval: 3s
       timeout: 5s
       retries: 10
