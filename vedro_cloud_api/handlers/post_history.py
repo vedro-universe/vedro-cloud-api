@@ -6,12 +6,16 @@ from aiohttp.web import Request, Response, json_response
 
 from ..entities import HistoryEntity
 from ..repositories import HistoryRepository
+from ..utils import validate_project_id
 
 __all__ = ("post_history",)
 
 
 async def post_history(request: Request) -> Response:
     history_repo: HistoryRepository = request.app["history_repo"]
+
+    project_id = request.match_info["project_id"]
+    assert validate_project_id(project_id)
 
     payload = await request.json()
     history_entities = []
@@ -28,6 +32,6 @@ async def post_history(request: Request) -> Response:
         )
         history_entities.append(history_entity)
 
-    await history_repo.save_history_entities(history_entities)
+    await history_repo.save_history_entities(project_id, history_entities)
 
-    return json_response(status=HTTPStatus.OK)
+    return json_response(payload, status=HTTPStatus.OK)

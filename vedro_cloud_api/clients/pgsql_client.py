@@ -11,9 +11,15 @@ class PgsqlClient:
         self._dsn = dsn
 
     @asynccontextmanager
-    async def acquire(self) -> AsyncGenerator[Connection, None]:
+    async def connection(self) -> AsyncGenerator[Connection, None]:
         conn = await connect(self._dsn)
         try:
             yield conn
         finally:
             await conn.close()
+
+    @asynccontextmanager
+    async def transaction(self) -> AsyncGenerator[Connection, None]:
+        async with self.connection() as connection:
+            async with connection.transaction():
+                yield connection

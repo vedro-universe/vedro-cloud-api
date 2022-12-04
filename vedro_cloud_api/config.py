@@ -8,4 +8,4 @@ class Config(cabina.Config):
         PORT: int = env.int("PORT", default=80)
 
     class Database(cabina.Section):
-        DSN: str = env.str("DB_DSN", "postgresql://vedro_cloud:vedro_cloud@db:5432/vedro_cloud")
+        DSN: str = env.str("DB_DSN")

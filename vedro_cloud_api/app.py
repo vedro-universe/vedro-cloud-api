@@ -3,7 +3,7 @@ from aiohttp.web import Application
 
 from .clients import PgsqlClient
 from .config import Config
-from .handlers import get_slow_scenarios, healthcheck, post_history
+from .handlers import get_scenarios, healthcheck, post_history
 from .repositories import HistoryRepository
 
 __all__ = ("create_app",)
@@ -17,8 +17,8 @@ async def create_app() -> Application:
 
     app.add_routes([
         web.get("/healthcheck", healthcheck),
-        web.post("/v0.1/history", post_history),
-        web.get("/v0.1/scenarios/slow", get_slow_scenarios),
+        web.post("/v0.1/projects/{project_id}/history", post_history),
+        web.get("/v0.1/projects/{project_id}/scenarios", get_scenarios),
     ])
 
     return app
