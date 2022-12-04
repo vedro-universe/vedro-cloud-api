@@ -1,9 +1,11 @@
 from datetime import timedelta
 from typing import Dict, List
+
 from asyncpg.exceptions import UndefinedTableError
-from .repository import Repository
+
 from ..clients import PgsqlClient
 from ..entities import HistoryEntity
+from .repository import Repository
 
 __all__ = ("HistoryRepository",)
 
@@ -70,7 +72,7 @@ class HistoryRepository(Repository):
             ORDER BY median DESC
         """
 
-        results = []
+        results: List[Dict[str, str | int]] = []
         async with self._pgsql_client.connection() as conn:
             try:
                 records = await conn.fetch(query)
