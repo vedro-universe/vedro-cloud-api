@@ -1,14 +1,29 @@
-from datetime import timedelta
-from typing import Dict, List
+from datetime import datetime, timedelta
+from typing import Dict, List, TypedDict
+from uuid import UUID
 
 from asyncpg.exceptions import UndefinedTableError
 
 from ..clients import PgsqlClient
-from ..entities import HistoryEntity
 from ..utils import cut_str
 from .repository import Repository
 
-__all__ = ("HistoryRepository",)
+__all__ = ("HistoryRepository", "HistoryEntity")
+
+
+class HistoryEntity(TypedDict):
+    id: UUID
+    launch_id: UUID
+    report_id: str
+    report_hash: str
+
+    scenario_hash: str
+    scenario_path: str
+    scenario_subject: str
+
+    status: str
+    started_at: datetime
+    ended_at: datetime
 
 
 class HistoryRepository(Repository):
@@ -45,19 +60,19 @@ class HistoryRepository(Repository):
         args = []
         for entity in history:
             args.append([
-                entity.id,
-                entity.launch_id,
-                cut_str(entity.report_id, 255),
-                entity.report_hash,
+                entity["id"],
+                entity["launch_id"],
+                cut_str(entity["report_id"], 255),
+                entity["report_hash"],
 
-                entity.scenario_hash,
-                cut_str(entity.scenario_path, 255),
-                cut_str(entity.scenario_subject, 255),
+                entity["scenario_hash"],
+                cut_str(entity["scenario_path"], 255),
+                cut_str(entity["scenario_subject"], 255),
 
-                entity.status,
-                entity.started_at,
-                entity.ended_at,
-                entity.ended_at - entity.started_at
+                entity["status"],
+                entity["started_at"],
+                entity["ended_at"],
+                entity["ended_at"] - entity["started_at"]
             ])
 
         async with self._pgsql_client.transaction() as conn:

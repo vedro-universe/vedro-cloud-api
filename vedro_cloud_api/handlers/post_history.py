@@ -1,13 +1,11 @@
 from datetime import datetime
-from hashlib import blake2b
 from http import HTTPStatus
 from uuid import UUID, uuid4
 
 from aiohttp.web import Request, Response, json_response
 from d42 import schema
 
-from ..entities import HistoryEntity
-from ..repositories import HistoryRepository
+from ..repositories import HistoryEntity, HistoryRepository
 from ..schemas import HistoryListSchema, ProjectIdSchema
 from ..utils import make_hash, validate
 
@@ -32,22 +30,20 @@ async def post_history(request: Request) -> Response:
     history = []
     for record in payload:
         report_id = record["report_id"] if record["report_id"] else str(uuid4())
-        report_hash = make_hash(report_id)
+        entity: HistoryEntity = {
+            "id": UUID(record["id"]),
+            "launch_id": UUID(record["launch_id"]),
+            "report_id": report_id,
+            "report_hash": make_hash(report_id),
 
-        entity = HistoryEntity(
-            id=UUID(record["id"]),
-            launch_id=UUID(record["launch_id"]),
-            report_id=report_id,
-            report_hash=report_hash,
+            "scenario_hash": record["scenario_path"],
+            "scenario_path": record["scenario_path"],
+            "scenario_subject": record["scenario_subject"],
 
-            scenario_hash=record["scenario_hash"],
-            scenario_path=record["scenario_path"],
-            scenario_subject=record["scenario_subject"],
-
-            status=record["status"],
-            started_at=datetime.fromtimestamp(record["started_at"] / 1000),
-            ended_at=datetime.fromtimestamp(record["ended_at"] / 1000),
-        )
+            "status": record["status"],
+            "started_at": datetime.fromtimestamp(record["started_at"] / 1000),
+            "ended_at": datetime.fromtimestamp(record["ended_at"] / 1000),
+        }
         history.append(entity)
 
     try:
