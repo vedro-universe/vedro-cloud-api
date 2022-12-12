@@ -1,37 +1,60 @@
 from datetime import datetime
+from hashlib import blake2b
 from http import HTTPStatus
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from aiohttp.web import Request, Response, json_response
+from d42 import schema
 
 from ..entities import HistoryEntity
 from ..repositories import HistoryRepository
-from ..utils import validate_project_id
+from ..schemas import HistoryListSchema, ProjectIdSchema
+from ..utils import make_hash, validate
 
 __all__ = ("post_history",)
+
+SegmentsSchema = schema.dict({
+    "project_id": ProjectIdSchema,
+})
 
 
 async def post_history(request: Request) -> Response:
     history_repo: HistoryRepository = request.app["history_repo"]
 
+    if errors := validate(request.match_info, SegmentsSchema):
+        return json_response({"errors": errors}, status=HTTPStatus.BAD_REQUEST)
     project_id = request.match_info["project_id"]
-    assert validate_project_id(project_id)
 
     payload = await request.json()
-    history_entities = []
-    for x in payload:
-        history_entity = HistoryEntity(
-            id=UUID(x["id"]),
-            scenario_id=x["scenario_id"],
-            scenario_hash=x["scenario_hash"],
-            scenario_path=x["scenario_path"],
-            scenario_subject=x["scenario_subject"],
-            status=x["status"],
-            started_at=datetime.fromtimestamp(x["started_at"] / 1000),
-            ended_at=datetime.fromtimestamp(x["ended_at"] / 1000),
-        )
-        history_entities.append(history_entity)
+    if errors := validate(payload, HistoryListSchema):
+        return json_response({"errors": errors}, status=HTTPStatus.BAD_REQUEST)
 
-    await history_repo.save_history_entities(project_id, history_entities)
+    history = []
+    for record in payload:
+        report_id = record["report_id"] if record["report_id"] else str(uuid4())
+        report_hash = make_hash(report_id)
+
+        entity = HistoryEntity(
+            id=UUID(record["id"]),
+            launch_id=UUID(record["launch_id"]),
+            report_id=report_id,
+            report_hash=report_hash,
+
+            scenario_hash=record["scenario_hash"],
+            scenario_path=record["scenario_path"],
+            scenario_subject=record["scenario_subject"],
+
+            status=record["status"],
+            started_at=datetime.fromtimestamp(record["started_at"] / 1000),
+            ended_at=datetime.fromtimestamp(record["ended_at"] / 1000),
+        )
+        history.append(entity)
+
+    try:
+        await history_repo.save_history_entities(project_id, history)
+    except Exception as e:
+        print("Error: ", type(e), e)
+        return json_response({"errors": ["Internal server error"]},
+                             status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     return json_response(payload, status=HTTPStatus.OK)

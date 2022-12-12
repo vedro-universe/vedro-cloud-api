@@ -7,7 +7,10 @@ install:
 
 .PHONY: dev
 dev:
-	HOST=localhost PORT=8080 python3 -m vedro_cloud_api
+	HOST=localhost \
+	PORT=8080 \
+	DB_DSN=postgresql://vedro_cloud:vedro_cloud@localhost:6432/vedro_cloud \
+ 		python3 -m vedro_cloud_api
 
 .PHONY: test
 test:

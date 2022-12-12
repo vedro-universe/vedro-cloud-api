@@ -5,6 +5,7 @@ from asyncpg.exceptions import UndefinedTableError
 
 from ..clients import PgsqlClient
 from ..entities import HistoryEntity
+from ..utils import cut_str
 from .repository import Repository
 
 __all__ = ("HistoryRepository",)
@@ -14,37 +15,49 @@ class HistoryRepository(Repository):
     def __init__(self, pgsql_client: PgsqlClient) -> None:
         self._pgsql_client = pgsql_client
 
+    def _make_table_name(self, project_id: str) -> str:
+        project_id = project_id.replace("-", "_")
+        return f"history_{project_id}"
+
     async def save_history_entities(self, project_id: str,
-                                    history_entities: List[HistoryEntity]) -> None:
-        table_name = f"history_{project_id}"
+                                    history: List[HistoryEntity]) -> None:
+        table_name = self._make_table_name(project_id)
         create_query = f"CREATE TABLE IF NOT EXISTS {table_name} (LIKE history INCLUDING ALL)"
 
         insert_query = f"""
             INSERT INTO {table_name} (
                 id,
-                scenario_id,
+                launch_id,
+                report_id,
+                report_hash,
+
                 scenario_hash,
                 scenario_path,
                 scenario_subject,
+
                 status,
                 started_at,
                 ended_at,
                 duration
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         """
         args = []
-        for history_entity in history_entities:
+        for entity in history:
             args.append([
-                history_entity.id,
-                history_entity.scenario_id,
-                history_entity.scenario_hash,
-                history_entity.scenario_path,
-                history_entity.scenario_subject,
-                history_entity.status,
-                history_entity.started_at,
-                history_entity.ended_at,
-                history_entity.ended_at - history_entity.started_at
+                entity.id,
+                entity.launch_id,
+                cut_str(entity.report_id, 255),
+                entity.report_hash,
+
+                entity.scenario_hash,
+                cut_str(entity.scenario_path, 255),
+                cut_str(entity.scenario_subject, 255),
+
+                entity.status,
+                entity.started_at,
+                entity.ended_at,
+                entity.ended_at - entity.started_at
             ])
 
         async with self._pgsql_client.transaction() as conn:
@@ -54,7 +67,7 @@ class HistoryRepository(Repository):
     async def get_scenarios(self, project_id: str, order_by: str) -> List[Dict[str, str | int]]:
         assert order_by in ("duration",)
 
-        table_name = f"history_{project_id}"
+        table_name = self._make_table_name(project_id)
         query = f"""
             WITH stats AS (
                 SELECT

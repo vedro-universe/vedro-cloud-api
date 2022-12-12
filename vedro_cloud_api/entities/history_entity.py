@@ -10,10 +10,14 @@ __all__ = ("HistoryEntity",)
 @dataclass
 class HistoryEntity(Entity):
     id: UUID
-    scenario_id: str
+    launch_id: UUID
+    report_id: str
+    report_hash: str
+
     scenario_hash: str
     scenario_path: str
     scenario_subject: str
+
     status: str
     started_at: datetime
     ended_at: datetime
