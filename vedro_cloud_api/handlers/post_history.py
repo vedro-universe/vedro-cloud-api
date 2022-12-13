@@ -36,7 +36,7 @@ async def post_history(request: Request) -> Response:
             "report_id": report_id,
             "report_hash": make_hash(report_id),
 
-            "scenario_hash": record["scenario_path"],
+            "scenario_hash": record["scenario_hash"],
             "scenario_path": record["scenario_path"],
             "scenario_subject": record["scenario_subject"],
 

@@ -7,7 +7,7 @@ HashSchema = schema.str.regex(r"[a-z0-9]{40}")
 
 StatusSchema = schema.str("PASSED") | schema.str("FAILED") | schema.str("SKIPPED")
 
-TimeStampSchema = schema.int.min(1)
+TimeStampSchema = schema.int.min(0)
 
 HistorySchema = schema.dict({
     "id": schema_uuid_str,
@@ -23,4 +23,4 @@ HistorySchema = schema.dict({
     "ended_at": TimeStampSchema,
 })
 
-HistoryListSchema = schema.list(HistorySchema).len(1, ...)
+HistoryListSchema = schema.list(HistorySchema)

@@ -89,6 +89,7 @@ class HistoryRepository(Repository):
                     scenario_hash,
                     PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY duration) AS median
                 FROM {table_name}
+                WHERE status IN ('PASSED', 'FAILED')
                 GROUP BY scenario_hash
             )
             SELECT
@@ -99,7 +100,6 @@ class HistoryRepository(Repository):
                 ON h.scenario_hash = s.scenario_hash
             ORDER BY median DESC
         """
-
         results: List[Dict[str, str | int]] = []
         async with self._pgsql_client.connection() as conn:
             try:
