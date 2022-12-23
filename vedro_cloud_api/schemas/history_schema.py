@@ -12,11 +12,12 @@ TimeStampSchema = schema.int.min(0)
 HistorySchema = schema.dict({
     "id": schema_uuid_str,
     "launch_id": schema_uuid_str,
-    "report_id": schema.str.len(1, ...) | schema.none,
+    "report_id": schema.str.len(1, 40) | schema.none,
 
     "scenario_hash": HashSchema,
-    "scenario_path": schema.str.len(1, ...),
+    "scenario_rel_path": schema.str.len(1, ...),
     "scenario_subject": schema.str.len(1, ...),
+    "scenario_namespace": schema.str.len(0, ...),
 
     "status": StatusSchema,
     "started_at": TimeStampSchema,

@@ -7,7 +7,7 @@ from d42 import schema
 
 from ..repositories import HistoryEntity, HistoryRepository
 from ..schemas import HistoryListSchema, ProjectIdSchema
-from ..utils import make_hash, validate
+from ..utils import validate
 
 __all__ = ("post_history",)
 
@@ -27,18 +27,22 @@ async def post_history(request: Request) -> Response:
     if errors := validate(payload, HistoryListSchema):
         return json_response({"errors": errors}, status=HTTPStatus.BAD_REQUEST)
 
+    report_id = str(uuid4())
+    if (len(payload) > 0) and (payload[0]["report_id"] is not None):
+        report_id = payload[0]["report_id"]
+
     history = []
     for record in payload:
-        report_id = record["report_id"] if record["report_id"] else str(uuid4())
         entity: HistoryEntity = {
             "id": UUID(record["id"]),
             "launch_id": UUID(record["launch_id"]),
             "report_id": report_id,
-            "report_hash": make_hash(report_id),
+            "project_id": project_id,
 
             "scenario_hash": record["scenario_hash"],
-            "scenario_path": record["scenario_path"],
+            "scenario_rel_path": record["scenario_rel_path"],
             "scenario_subject": record["scenario_subject"],
+            "scenario_namespace": record["scenario_namespace"],
 
             "status": record["status"],
             "started_at": datetime.fromtimestamp(record["started_at"] / 1000),
@@ -47,7 +51,7 @@ async def post_history(request: Request) -> Response:
         history.append(entity)
 
     try:
-        await history_repo.save_history_entities(project_id, history)
+        await history_repo.save_history_entities(project_id, report_id, history)
     except Exception as e:
         print("Error: ", type(e), e)
         return json_response({"errors": ["Internal server error"]},
