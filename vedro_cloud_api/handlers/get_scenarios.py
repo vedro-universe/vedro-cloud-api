@@ -1,10 +1,11 @@
 from http import HTTPStatus
+from uuid import uuid4
 
 from aiohttp.web import Request, Response, json_response
-from d42 import schema
+from d42 import optional, schema
 
 from ..repositories import HistoryRepository
-from ..schemas import ProjectIdSchema
+from ..schemas import ProjectIdSchema, ReportIdSchema
 from ..utils import validate
 
 __all__ = ("get_scenarios",)
@@ -15,6 +16,7 @@ SegmentsSchema = schema.dict({
 
 ParamsSchema = schema.dict({
     "order_by": schema.str("duration"),
+    optional("report_id"): ReportIdSchema,
 })
 
 
@@ -28,9 +30,10 @@ async def get_scenarios(request: Request) -> Response:
     if errors := validate(dict(request.query), ParamsSchema):
         return json_response({"errors": errors}, status=HTTPStatus.BAD_REQUEST)
     order_by = request.query.getone("order_by")
+    report_id = request.query.get("report_id", str(uuid4()))
 
     try:
-        scenarios = await history_repo.get_scenarios(project_id, order_by=order_by)
+        scenarios = await history_repo.get_scenarios(project_id, order_by, report_id)
     except Exception as e:
         print("Error: ", type(e), e)
         return json_response({"errors": ["Internal server error"]},

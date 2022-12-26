@@ -159,39 +159,50 @@ class HistoryRepository(Repository):
                                                                  history, scenarios)
             await conn.executemany(runs_query, runs_args)
 
-    async def get_scenarios(self, project_id: str, order_by: str) -> List[Dict[str, str | int]]:
+    async def get_scenarios(self, project_id: str,
+                            order_by: str, report_id: str) -> List[Dict[str, str | int]]:
         assert order_by in ("duration",)
 
-        query = """
-            WITH stats AS (
+        async with self._pgsql_client.transaction() as conn:
+            project_query, project_args = self._make_create_project_query(project_id)
+            await conn.execute(project_query, *project_args)
+
+            report_query, report_args = self._make_create_report_query(project_id, report_id)
+            row = await conn.fetchrow(report_query, *report_args)
+            report_id = row["id"]
+
+            query = """
+                WITH stats AS (
+                    SELECT
+                        scenario_id,
+                        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY duration) AS median,
+                        AVG(duration) as average
+                    FROM runs
+                    WHERE project_id = $1
+                        AND status IN ('PASSED', 'FAILED')
+                        AND serial <= (SELECT snapshot FROM reports WHERE id = $2)
+                    GROUP BY scenario_id
+                )
                 SELECT
-                    scenario_id,
-                    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY duration) AS median
-                FROM runs
-                WHERE project_id = $1
-                    AND status IN ('PASSED', 'FAILED')
-                GROUP BY scenario_id
-            )
-            SELECT
-                DISTINCT(scenarios.id),
-                scenarios.scenario_id,
-                median
-            FROM scenarios
-            JOIN stats as s
-                ON scenarios.id = s.scenario_id
-            ORDER BY median DESC
-        """
-        results: List[Dict[str, str | int]] = []
-        async with self._pgsql_client.connection() as conn:
+                    DISTINCT(scenarios.id),
+                    scenarios.scenario_id,
+                    median,average
+                FROM scenarios
+                JOIN stats as s
+                    ON scenarios.id = s.scenario_id
+                ORDER BY median DESC, average DESC
+            """
+            results: List[Dict[str, str | int]] = []
             try:
-                records = await conn.fetch(query, project_id)
+                records = await conn.fetch(query, project_id, report_id)
             except UndefinedTableError:
                 return results
             for record in records:
                 results.append({
                     "id": str(record["id"]),
-                    "scenario_hash": record["scenario_id"],
+                    "hash": record["scenario_id"],
                     "median": int(record["median"] / timedelta(milliseconds=1)),
+                    "average": int(record["average"] / timedelta(milliseconds=1)),
                 })
 
         return results
