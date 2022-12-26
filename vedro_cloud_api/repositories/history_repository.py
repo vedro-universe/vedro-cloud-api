@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Tuple, TypedDict
 from uuid import UUID, uuid4
 
-from asyncpg.exceptions import UndefinedTableError
-
 from ..clients import PgsqlClient
 from ..utils import cut_str
 from .repository import Repository
@@ -171,6 +169,7 @@ class HistoryRepository(Repository):
             row = await conn.fetchrow(report_query, *report_args)
             report_id = row["id"]
 
+        async with self._pgsql_client.connection() as conn:
             query = """
                 WITH stats AS (
                     SELECT
@@ -193,10 +192,7 @@ class HistoryRepository(Repository):
                 ORDER BY median DESC, average DESC
             """
             results: List[Dict[str, str | int]] = []
-            try:
-                records = await conn.fetch(query, project_id, report_id)
-            except UndefinedTableError:
-                return results
+            records = await conn.fetch(query, project_id, report_id)
             for record in records:
                 results.append({
                     "id": str(record["id"]),
