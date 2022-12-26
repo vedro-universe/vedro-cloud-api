@@ -17,8 +17,8 @@ async def create_app() -> Application:
 
     app.add_routes([
         web.get("/healthcheck", healthcheck),
-        web.post("/v0.2/projects/{project_id}/history", post_history),
-        web.get("/v0.2/projects/{project_id}/scenarios", get_scenarios),
+        web.post("/v0.3/projects/{project_id}/history", post_history),
+        web.get("/v0.3/projects/{project_id}/scenarios", get_scenarios),
     ])
 
     return app
