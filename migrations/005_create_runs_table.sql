@@ -1,4 +1,5 @@
-CREATE TABLE IF NOT EXISTS runs (
+-- +goose Up
+CREATE TABLE runs (
     "serial" SERIAL,
 
     "id" UUID NOT NULL,
@@ -26,3 +27,6 @@ CREATE TABLE IF NOT EXISTS runs (
     CONSTRAINT "runs_report_id_fkey" FOREIGN KEY ("report_id") REFERENCES reports ("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- +goose Down
+DROP TABLE runs;

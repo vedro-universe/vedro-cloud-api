@@ -1,4 +1,5 @@
-CREATE TABLE IF NOT EXISTS scenarios (
+-- +goose Up
+CREATE TABLE scenarios (
     "id" UUID NOT NULL,
 
     "scenario_id" varchar(40) NOT NULL,
@@ -17,3 +18,6 @@ CREATE TABLE IF NOT EXISTS scenarios (
     CONSTRAINT "scenarios_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES projects ("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- +goose Down
+DROP TABLE scenarios;

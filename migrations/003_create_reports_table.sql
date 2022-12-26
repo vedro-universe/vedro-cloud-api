@@ -1,4 +1,5 @@
-CREATE TABLE IF NOT EXISTS reports (
+-- +goose Up
+CREATE TABLE reports (
     "id" UUID NOT NULL,
 
     "report_id" varchar(40) NOT NULL,
@@ -14,3 +15,6 @@ CREATE TABLE IF NOT EXISTS reports (
     CONSTRAINT "reports_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES projects ("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- +goose Down
+DROP TABLE reports;

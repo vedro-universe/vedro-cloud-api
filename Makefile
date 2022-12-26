@@ -1,4 +1,5 @@
 PROJECT_NAME=vedro_cloud_api
+DB_DSN=postgresql://vedro_cloud:vedro_cloud@localhost:6432/vedro_cloud
 
 .PHONY: install
 install:
@@ -7,10 +8,16 @@ install:
 
 .PHONY: dev
 dev:
-	HOST=localhost \
-	PORT=8080 \
-	DB_DSN=postgresql://vedro_cloud:vedro_cloud@localhost:6432/vedro_cloud \
+	HOST=localhost PORT=8080 DB_DSN=${DB_DSN} \
  		python3 -m vedro_cloud_api
+
+.PHONY: migrate
+migrate:
+	@GOOSE_DBSTRING=${DB_DSN} goose -dir ./migrations up
+
+.PHONY: rollback
+rollback:
+	@GOOSE_DBSTRING=${DB_DSN} goose -dir ./migrations down
 
 .PHONY: test
 test:
