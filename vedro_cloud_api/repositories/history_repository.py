@@ -92,14 +92,22 @@ class HistoryRepository(Repository):
             ON CONFLICT (scenario_id, project_id) DO UPDATE SET updated_at = EXCLUDED.updated_at
             RETURNING id, scenario_id
         """
+        scenarios = {}
+        for entity in history:
+            scenarios[entity["scenario_hash"]] = {
+                "hash": entity["scenario_hash"],
+                "subject": entity["scenario_subject"],
+                "namespace": entity["scenario_namespace"],
+                "rel_path": entity["scenario_rel_path"],
+            }
 
         args: List[List[Any]] = [[] for _ in range(5)]
-        for entity in history:
-            args[0].append(entity["scenario_hash"])
+        for _, scn in scenarios.items():
+            args[0].append(scn["hash"])
             args[1].append(project_id)
-            args[2].append(cut_str(entity["scenario_subject"], 255))
-            args[3].append(cut_str(entity["scenario_namespace"], 255))
-            args[4].append(cut_str(entity["scenario_rel_path"], 255))
+            args[2].append(cut_str(scn["subject"], 255))
+            args[3].append(cut_str(scn["namespace"], 255))
+            args[4].append(cut_str(scn["rel_path"], 255))
 
         return query, args
 
