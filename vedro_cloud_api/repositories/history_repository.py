@@ -193,7 +193,8 @@ class HistoryRepository(Repository):
                 SELECT
                     DISTINCT(scenarios.id),
                     scenarios.scenario_id,
-                    median,average
+                    median,
+                    average
                 FROM scenarios
                 JOIN stats as s
                     ON scenarios.id = s.scenario_id

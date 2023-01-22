@@ -3,11 +3,11 @@ from http import HTTPStatus
 from uuid import UUID, uuid4
 
 from aiohttp.web import Request, Response, json_response
+from aiohttp_valera_validator import validate
 from d42 import schema
 
 from ..repositories import HistoryEntity, HistoryRepository
 from ..schemas import HistoryListSchema, ProjectIdSchema
-from ..utils import validate
 
 __all__ = ("post_history",)
 
@@ -16,16 +16,12 @@ SegmentsSchema = schema.dict({
 })
 
 
+@validate(segments=SegmentsSchema, json=HistoryListSchema)
 async def post_history(request: Request) -> Response:
     history_repo: HistoryRepository = request.app["history_repo"]
 
-    if errors := validate(request.match_info, SegmentsSchema):
-        return json_response({"errors": errors}, status=HTTPStatus.BAD_REQUEST)
     project_id = request.match_info["project_id"]
-
     payload = await request.json()
-    if errors := validate(payload, HistoryListSchema):
-        return json_response({"errors": errors}, status=HTTPStatus.BAD_REQUEST)
 
     report_id = str(uuid4())
     if (len(payload) > 0) and (payload[0]["report_id"] is not None):
