@@ -33,3 +33,14 @@ services:
       interval: 3s
       timeout: 5s
       retries: 10
+
+  migrations:
+    image: gomicro/goose:3.7.0
+    command: goose postgres up
+    environment:
+      - GOOSE_DBSTRING=postgresql://vedro_cloud:vedro_cloud@db:5432/vedro_cloud
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      db:
+        condition: service_healthy
