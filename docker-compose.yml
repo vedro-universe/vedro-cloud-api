@@ -2,12 +2,14 @@ version: "3.9"
 
 services:
   app:
-    image: vedrouniverse/vedro-cloud-api:0.3.0
+    # image: vedrouniverse/vedro-cloud-api:0.3.0
     environment:
       - TZ=UTC
       - DB_DSN=postgresql://vedro_cloud:vedro_cloud@db:5432/vedro_cloud
     ports:
       - "8080:80"
+    volumes:
+      - migrations:/app/migrations
     healthcheck:
       test: "wget -q -O - http://localhost/healthcheck"
       interval: 3s
@@ -40,7 +42,12 @@ services:
     environment:
       - GOOSE_DBSTRING=postgresql://vedro_cloud:vedro_cloud@db:5432/vedro_cloud
     volumes:
-      - ./migrations:/migrations
+      - migrations:/migrations
     depends_on:
+      app:
+        condition: service_healthy
       db:
         condition: service_healthy
+
+volumes:
+  migrations:
