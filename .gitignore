@@ -128,8 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# PostgreSQL
-pgdata/
+# MongoDb
+mongodata/
 
 # PyCharm
 .idea/

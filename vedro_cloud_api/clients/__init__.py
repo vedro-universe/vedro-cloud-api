@@ -1,3 +1,3 @@
-from .pgsql_client import PgsqlClient
+from .mongo_client import MongoClient
 
-__all__ = ("PgsqlClient",)
+__all__ = ("MongoClient",)
