@@ -1,3 +1,3 @@
-from .pgsql_client import PgsqlClient
+from .postgresql import PostgreSQL
 
-__all__ = ("PgsqlClient",)
+__all__ = ("PostgreSQL",)

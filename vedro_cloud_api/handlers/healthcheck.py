@@ -1,9 +1,8 @@
-from http import HTTPStatus
-
-from aiohttp.web import Request, Response, json_response
+from sanic import HTTPResponse, Request
+from sanic.response import json
 
 __all__ = ("healthcheck",)
 
 
-async def healthcheck(request: Request) -> Response:
-    return json_response({}, status=HTTPStatus.OK)
+async def healthcheck(request: Request) -> HTTPResponse:
+    return json({"status": "ok"})

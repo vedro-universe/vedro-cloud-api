@@ -1,43 +1,35 @@
 PROJECT_NAME=vedro_cloud_api
-DB_DSN=postgresql://vedro_cloud:vedro_cloud@localhost:6432/vedro_cloud
+DB_DSN=postgresql://vedro_cloud:vedro_cloud@127.0.0.1:6432/vedro_cloud
 
 .PHONY: install
 install:
-	pip3 install --quiet --upgrade pip
-	pip3 install --quiet -r requirements.txt -r requirements-dev.txt
+	@pip3 install --quiet --upgrade pip
+	@pip3 install --quiet -r requirements.txt -r requirements-dev.txt
 
 .PHONY: dev
 dev:
-	HOST=localhost PORT=8080 DB_DSN=${DB_DSN} \
- 		python3 -m vedro_cloud_api
+	@python3 -m sanic vedro_cloud_api:create_app --host 127.0.0.1 --port 8080 --dev
 
 .PHONY: migrate
 migrate:
-	@GOOSE_DBSTRING=${DB_DSN} goose -dir ./migrations up
-
-.PHONY: rollback
-rollback:
-	@GOOSE_DBSTRING=${DB_DSN} goose -dir ./migrations down
-
-.PHONY: test
-test:
-	python3 -m unittest discover -s tests
+	@python3 -m yoyo apply --batch --no-config-file --database ${DB_DSN} ./migrations
+	@python3 -m yoyo list --no-config-file --database ${DB_DSN} ./migrations
 
 .PHONY: check-types
 check-types:
-	python3 -m mypy ${PROJECT_NAME} --strict
+	@python3 -m mypy ${PROJECT_NAME} --strict
 
 .PHONY: check-imports
 check-imports:
-	python3 -m isort ${PROJECT_NAME} tests --check-only
+	@python3 -m isort ${PROJECT_NAME} --check-only
 
 .PHONY: sort-imports
 sort-imports:
-	python3 -m isort ${PROJECT_NAME} tests
+	@python3 -m isort ${PROJECT_NAME}
 
 .PHONY: check-style
 check-style:
-	python3 -m flake8 ${PROJECT_NAME} tests
+	@python3 -m flake8 ${PROJECT_NAME}
 
 .PHONY: lint
 lint: check-types check-style check-imports
