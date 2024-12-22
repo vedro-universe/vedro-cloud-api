@@ -12,6 +12,7 @@ from .handlers.get_report_results import get_report_results
 from .handlers.healthcheck import healthcheck
 from .handlers.post_report_results import post_report_results
 from .repositories.project import ProjectRepository
+from .repositories.report import ReportRepository
 
 __all__ = ("create_app",)
 
@@ -57,5 +58,6 @@ def create_app(config: Type[Config] = Config) -> SanicApp:
 
     app.ctx.pgsql = PostgreSQL("postgresql://vedro_cloud:vedro_cloud@127.0.0.1:6432/vedro_cloud")
     app.ctx.project_repo = ProjectRepository(app.ctx.pgsql)
+    app.ctx.report_repo = ReportRepository(app.ctx.pgsql)
 
     return app
